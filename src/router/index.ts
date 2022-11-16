@@ -2,7 +2,7 @@ import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
 import NProgress from "nprogress"; // progress bar
 import "nprogress/nprogress.css"; // progress bar style/
 import { useAuthStore } from "../stores/auth";
-import { nextTick } from "process";
+import Auth from "../views/auth/Index.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -14,6 +14,10 @@ const routes: RouteRecordRaw[] = [
         path: "login",
         name: "Login",
         component: () => import("../views/auth/Login.vue"),
+        beforeEnter: (to, from) => {
+          const { token } = useAuthStore();
+          if (token) return false;
+        },
       },
     ],
   },

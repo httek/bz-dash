@@ -1,19 +1,15 @@
 <script setup lang="ts">
-import { computed } from "@vue/reactivity";
-import { useAuthStore } from "./stores/auth";
-import Layout from "./layouts/Layout.vue";
-import MainLayout from "./layouts/Main.vue";
-import AuthLayout from "./layouts/Auth.vue";
-import { ref } from "vue";
+import { computed } from '@vue/reactivity';
+import Main from './layouts/Main.vue';
+import Auth from './layouts/Auth.vue';
+import { useAuthStore } from './stores/auth';
 
 const authStore = useAuthStore()
-const isLogin = computed(() => !!authStore.token)
-
+const component = computed(() => !!authStore.token ? Main : Auth)
 </script>
 
 <template>
-  <Layout>
-    <MainLayout v-if="isLogin" />
-    <AuthLayout v-else />  
-  </Layout>
+  <RouterView>
+    <component :is="component" />
+  </RouterView>
 </template>
