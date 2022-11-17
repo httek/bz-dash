@@ -1,14 +1,19 @@
-import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
+import { RouteRecordRaw, createRouter, createWebHashHistory } from "vue-router";
 import NProgress from "nprogress"; // progress bar
 import "nprogress/nprogress.css"; // progress bar style/
 import { useAuthStore } from "../stores/auth";
-import Auth from "../views/auth/Index.vue";
+import { fetchMeta } from "../apis/auth";
+import { Menu } from "../models/menu.model";
 
 const routes: RouteRecordRaw[] = [
   {
+    path: "/:pathMatch(.*)*",
+    name: "-",
+    redirect: "/error/404",
+  },
+  {
     path: "/auth",
     redirect: "/auth/login",
-    component: () => import("../views/auth/Index.vue"),
     children: [
       {
         path: "login",
@@ -27,15 +32,15 @@ const routes: RouteRecordRaw[] = [
     component: () => import("../views/dash/index.vue"),
   },
   {
-    path: "/:w+",
-    name: "404Page",
-    redirect: "/error/404",
+    path: "/error/404",
+    name: "PageNotFound",
+    component: () => import("../views/error/NotFound.vue"),
   },
 ];
 
-NProgress.configure({ showSpinner: true });
+NProgress.configure({ showSpinner: false });
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
   scrollBehavior() {
     return {
@@ -47,14 +52,27 @@ const router = createRouter({
 });
 
 const loginPath = "/auth/login";
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   NProgress.start();
   const authStore = useAuthStore();
   const { token } = authStore;
   if (!token && to.path !== loginPath) {
-    return loginPath;
+    return loginPath + "?redirct=" + to.path;
   } else if (token && to.path == loginPath) {
     authStore.reset();
+  }
+
+  if (token && authStore.permissions.length <= 0) {
+    const metaRes = await fetchMeta();
+
+    const { permissions, menus } = metaRes.data as {
+      permissions: string[];
+      menus: Menu[];
+    };
+
+    authStore.permissions = permissions;
+    authStore.menus = menus;
+    console.log("获取权限了", metaRes);
   }
 
   NProgress.done();

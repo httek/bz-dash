@@ -1,4 +1,4 @@
-export interface AdminModel {
+export interface Admin {
   id: number;
   name?: string;
   avatar?: string;
