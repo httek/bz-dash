@@ -104,6 +104,9 @@ const onSubmit = () => fetchData()
 const onReset = () => {
   form.status = 1
   form.name = ''
+  pagination.pageSize = 10
+  pagination.current = 1
+  fetchData()
 }
 
 const onDelete = (props: any) => {
