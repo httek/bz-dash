@@ -16,7 +16,7 @@ const isLogin = computed(() => !!authStore.token)
 watch(isLogin, (isLogin) => {
   console.log('reset');
 
-  router.replace(isLogin ? '/' : '/auth/login?redirect=' + route.path)
+  router.push(isLogin ? '/' : '/auth/login?redirect=' + route.path)
 })
 
 </script>

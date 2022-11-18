@@ -1,3 +1,3 @@
 <template>
-    <h1>Dash</h1>
+  <H1>Dash Index</H1>
 </template>

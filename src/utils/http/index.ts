@@ -25,8 +25,6 @@ http.interceptors.request.use((config: AxiosRequestConfig) => {
 
 http.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log(response.data.code);
-
     if (response.data.code == 4010) {
       const authStore = useAuthStore();
       authStore.reset();

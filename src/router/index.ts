@@ -1,4 +1,9 @@
-import { RouteRecordRaw, createRouter, createWebHashHistory } from "vue-router";
+import {
+  RouteRecordRaw,
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+} from "vue-router";
 import NProgress from "nprogress"; // progress bar
 import "nprogress/nprogress.css"; // progress bar style/
 import { useAuthStore } from "../stores/auth";
@@ -31,6 +36,14 @@ const routes: RouteRecordRaw[] = [
     name: "Dash",
     component: () => import("../views/dash/index.vue"),
   },
+
+  // Auth
+  {
+    path: "/system/auth/roles",
+    name: "RoleIndex",
+    component: () => import("../views/system/Role.vue"),
+  },
+
   {
     path: "/error/404",
     name: "PageNotFound",
@@ -40,7 +53,7 @@ const routes: RouteRecordRaw[] = [
 
 NProgress.configure({ showSpinner: false });
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes,
   scrollBehavior() {
     return {
