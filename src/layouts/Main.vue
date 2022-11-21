@@ -39,7 +39,7 @@
                     <t-dropdown-item class="my-0.5">
                       <t-icon name="user-circle" class="mr-2"></t-icon>个人中心
                     </t-dropdown-item>
-                    <t-dropdown-item @click="louout" class="my-0.5">
+                    <t-dropdown-item @click="authStore.reset()" class="my-0.5">
                       <t-icon name="poweroff" class="mr-2"></t-icon>退出登录
                     </t-dropdown-item>
                   </t-dropdown-menu>
@@ -58,30 +58,32 @@
           </template>
         </t-head-menu>
       </t-header>
-      <t-content class="p-2.5 h-full overflow-y-scroll">
+      <t-content class="p-2.5 h-full">
         <RouterView />
       </t-content>
-      <!-- <t-footer class="flex justify-center flex-wrap content-center">
+      <t-footer class="flex justify-center flex-wrap content-center py-1">
         <small class="antialiased font-light text-opacity-50">© {{ (new Date).getFullYear() }} HTek. All Rights
           Reserved.</small>
-      </t-footer> -->
+      </t-footer>
     </t-layout>
   </t-layout>
 </template>
 
 <script setup lang="ts">
 import Menu from './componets/Menu.vue';
-import { ref } from '@vue/reactivity';
+import { reactive, ref } from '@vue/reactivity';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { watch, watchEffect } from 'vue';
 
 const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
-const activeMenu = ref<string>(route.path)
+const activeMenu = ref<string>('/')
+watch(() => route.path, (path) => {
+  activeMenu.value = path
+})
 
-const menuCollapsed = ref<boolean>(false)
-const louout = () => {
-  authStore.reset()
-}
+let status = localStorage.getItem('menuCollapsed') == '1'
+const menuCollapsed = ref(status)
+watch(menuCollapsed, (s) => localStorage.setItem('menuCollapsed', s ? '1' : '0'))
 </script>

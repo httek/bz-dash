@@ -11,3 +11,7 @@ export async function login(params: {
 export async function fetchMeta(): Promise<Response> {
   return http.get("auth/meta");
 }
+
+export async function fetchPermissionsTree(): Promise<Response> {
+  return http.get("setting/permissions/tree");
+}

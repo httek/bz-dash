@@ -5,6 +5,7 @@ import axios, {
   AxiosError,
 } from "axios";
 import { useAuthStore } from "../../stores/auth";
+import { MessagePlugin as message } from "tdesign-vue-next";
 
 const http: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_HOST,
@@ -25,10 +26,15 @@ http.interceptors.request.use((config: AxiosRequestConfig) => {
 
 http.interceptors.response.use(
   (response: AxiosResponse) => {
-    if (response.data.code == 4010) {
+    if (response.data.code == 4010 || response.data.code == 4011) {
       const authStore = useAuthStore();
       authStore.reset();
-      console.log("reset auth store");
+    }
+
+    if (response.data.code == 4011) {
+      message.warning(response.data.msg);
+      const authStore = useAuthStore();
+      authStore.reset();
     }
 
     return response.data;

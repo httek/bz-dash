@@ -1,95 +1,84 @@
 <template>
-  <div class="mb-3 px-1">
-    <t-breadcrumb :max-item-width="'150'">
-      <t-breadcrumbItem>权限管理</t-breadcrumbItem>
-      <t-breadcrumbItem :max-width="'160'"> 角色管理 </t-breadcrumbItem>
-    </t-breadcrumb>
-  </div>
-  <div class="header bg-white py-4 rounded">
-    <t-form :data="form" :label-width="80" colon :style="{ marginBottom: '8px' }" @reset="onReset" @submit="onSubmit">
+  <t-card header-bordered title="权限管理" subtitle="角色管理" :loading="loading"
+    class="overflow-y-scroll border-none rounded-none">
+    <template #actions>
+      <t-button theme="primary" @click="onAdd()">
+        <t-icon name="add" /> 新增
+      </t-button>
+    </template>
+    <t-form :data="searchForm" :label-width="80" class="my-2" @reset="onReset" @submit="onSubmit">
       <t-row>
         <t-col :span="10">
-          <t-row :gutter="[16, 24]">
+          <t-row>
             <t-col :span="4">
               <t-form-item label="名称" name="name">
-                <t-input v-model="form.name" class="form-item-content" type="search" placeholder="请输入角色名称"
-                  :style="{ minWidth: '134px' }" />
+                <t-input v-model="searchForm.name" type="search" placeholder="按名称搜索" :style="{ minWidth: '134px' }" />
               </t-form-item>
             </t-col>
             <t-col :span="4">
               <t-form-item label="状态" name="type">
-                <t-select v-model="form.status" style="display: inline-block" class="form-item-content"
-                  :options="RoleStatusOptions" placeholder="请选择角色状态" />
+                <t-select v-model="searchForm.status" class="w-full" :options="RoleStatusOptions"
+                  placeholder="请选择角色状态" />
               </t-form-item>
             </t-col>
           </t-row>
         </t-col>
-
         <t-col :span="2">
           <t-button theme="primary" type="submit" class="ml-2"> 查询 </t-button>
           <t-button type="reset" variant="base" theme="default" class="ml-2"> 重置 </t-button>
         </t-col>
       </t-row>
     </t-form>
-  </div>
-
-  <t-table table-layout="fixed" :pagination="pagination" cell-empty-content="-" :columns="COLUMNS" :data="data"
-    row-key="index" class="px-3 rounded mt-2 pb-4">
-    <template #status="{ row }">
-      <t-tag v-if="row.status === 0" theme="danger" variant="light"> 禁用 </t-tag>
-      <t-tag v-if="row.status === 1" theme="success" variant="light"> 正常 </t-tag>
-    </template>
-    <template #op-column>
-      <p>操作</p>
-    </template>
-    <template #op="slotProps">
-      <t-link hover="color" theme="primary" @click="onEdit(slotProps)" class="mx-1"> 编辑 </t-link>
-      <t-popconfirm theme="danger" content="确认删除吗" @onConfirm="onDelete(slotProps)">
-        <t-link hover="color" theme="danger" class="mx-1"> 删除 </t-link>
-      </t-popconfirm>
-
-    </template>
-  </t-table>
+    <t-table ellipsis table-layout="fixed" :pagination="pagination" cell-empty-content="-" :columns="COLUMNS"
+      :data="data" row-key="index" class="px-3 rounded mt-4">
+      <template #name="{ row }">
+        <t-link hover="color" @click="onEdit(row)" class="underline"> {{ row.name }} </t-link>
+      </template>
+      <template #status="{ row }">
+        <t-tag v-if="row.status === 0" theme="danger" variant="light"> 禁用 </t-tag>
+        <t-tag v-if="row.status === 1" theme="success" variant="light"> 正常 </t-tag>
+      </template>
+      <template #op-column>
+        <p>操作</p>
+      </template>
+      <template #op="slotProps">
+        <t-link hover="color" theme="primary" @click="onEdit(slotProps)" class="mx-1"> 权限 </t-link>
+        <t-popconfirm theme="danger" content="确认删除吗" @confirm="onDelete(slotProps)">
+          <t-link hover="color" theme="danger" class="mx-1"> 删除 </t-link>
+        </t-popconfirm>
+      </template>
+    </t-table>
+  </t-card>
+  <t-drawer size="medium" destroyOnClose v-model:visible="showDrawer" :header="drawerHeader" show-in-attached-element
+    width="500px">
+    <t-form :data="form" :colon="true" @reset="onReset" @submit="onSubmit">
+      <t-form-item label="名称" name="name">
+        <t-input v-model="form.name" placeholder="名称"></t-input>
+      </t-form-item>
+      <t-form-item label="备注" name="remarks">
+        <t-input v-model="form.remarks" placeholder="备注"></t-input>
+      </t-form-item>
+      <t-form-item label="状态" name="type">
+        <t-select v-model="form.status" class="w-full" :options="RoleStatusOptions" placeholder="请选择状态" />
+      </t-form-item>
+      <t-form-item label="权限集" name="permissions">
+        <t-tree v-model="permissionsChecked" :icon="false" line expand-all :data="permissions" checkable />
+      </t-form-item>
+    </t-form>
+  </t-drawer>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { fetchRoles, RoleQuery } from '../../apis/role';
-import { RoleStatusOptions } from './role'
-
-const data = ref([])
-const COLUMNS = [
-  {
-    title: 'ID',
-    fixed: 'left',
-    width: 100,
-    ellipsis: true,
-    align: 'left',
-    colKey: 'id',
-  },
-  {
-    title: '名称',
-    fixed: 'left',
-    width: 200,
-    ellipsis: true,
-    align: 'left',
-    colKey: 'name',
-  },
-  { title: '状态', colKey: 'status', width: 200, cell: { col: 'status' } },
-  {
-    colKey: 'op',
-    width: 150,
-    title: 'op-column',
-    fixed: 'right',
-    cell: 'op',
-  },
-]
+import { RoleStatusOptions, COLUMNS } from './role'
+import { MessagePlugin as message } from 'tdesign-vue-next';
+import { fetchPermissionsTree } from '../../apis/auth';
+import { Menu } from '../../models/menu.model';
 
 const pagination = reactive({
   current: 1,
   pageSize: 10,
-  // defaultCurrent: 1,
-  // defaultPageSize: 10,
   total: 0,
   showJumper: false,
   onChange: (pageInfo: any) => {
@@ -99,33 +88,74 @@ const pagination = reactive({
   },
 });
 
-const form = reactive({ name: '', status: 1 })
+const data = ref([])
+const permissions = ref([])
+const permissionsChecked = ref([1, 13])
+const showDrawer = ref(false)
+const drawerHeader = ref('添加角色')
+const loading = ref(false)
+const searchForm = reactive({ name: '', status: 1 })
 const onSubmit = () => fetchData()
 const onReset = () => {
-  form.status = 1
-  form.name = ''
+  searchForm.status = 1
+  searchForm.name = ''
   pagination.pageSize = 10
   pagination.current = 1
   fetchData()
 }
 
+
+const form = reactive({
+  name: '', status: 1, remarks: '', permissions: []
+})
+
+
 const onDelete = (props: any) => {
   console.log(props);
+  message.success('操作成功')
 }
 
-const onEdit = (props: any) => {
-  console.log(props);
+const onAdd = async () => {
+  Object.assign(form, { name: '', status: 1, remarks: '' })
+  drawerHeader.value = '添加角色'
+  showDrawer.value = true
+  fetchPermissionsTrees()
+}
 
+const onEdit = async (props: any) => {
+  drawerHeader.value = '编辑角色'
+  fetchPermissionsTrees()
+  showDrawer.value = true
+  Object.assign(form, props)
+}
+
+const fetchPermissionsTrees = async () => {
+  const pRes = await fetchPermissionsTree()
+  const format = (items: Menu[]) => {
+    return (items).map((ds: any) => {
+      ds.label = ds.title
+      ds.value = ds.id
+
+      if (ds.children) {
+        format(ds.children as Menu[])
+      }
+
+      return ds;
+    })
+  }
+
+  permissions.value = format(pRes.data as Menu[]) as []
 }
 const fetchData = async () => {
-  const params: RoleQuery = {
-    ...form, size: pagination.pageSize, page: pagination.current
-  }
+  loading.value = true
+  const params: RoleQuery = { ...form, size: pagination.pageSize, page: pagination.current }
   const res = await fetchRoles(params)
   data.value = res.data.data
   pagination.total = res.data.total
   pagination.current = res.data.current
   pagination.pageSize = res.data.size
+
+  loading.value = false
 }
 
 onMounted(() => fetchData())
